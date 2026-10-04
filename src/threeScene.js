@@ -894,24 +894,29 @@ export class Car3DScene {
     const scrollAngle = this.scrollProgress * this.orbitScrollMultiplier;
     const driveYaw = scrollAngle + this.manualAngleOffset + this.idleTurntableAngle + 0.35;
 
-    // 5. Detect if footer is approaching / in viewport for staging & parking
+    // 5. Detect if parking stage / footer is approaching / in viewport for staging & parking
+    const parkingStageEl = document.querySelector('.parking-staging-section');
     const footerEl = document.querySelector('.apex-footer');
     const winW = window.innerWidth;
     const winH = window.innerHeight;
     let targetParkRatio = 0;
     let footerTop = winH;
 
-    if (footerEl) {
+    if (parkingStageEl) {
+      const stageRect = parkingStageEl.getBoundingClientRect();
+      if (stageRect.top <= winH * 0.85) {
+        targetParkRatio = Math.max(0, Math.min(1, (winH * 0.85 - stageRect.top) / (winH * 0.45)));
+      }
+    } else if (footerEl) {
       const footerRect = footerEl.getBoundingClientRect();
       footerTop = footerRect.top;
-      // Trigger when footer is well into the viewport
-      const parkTrigger = winH * 0.72;
+      const parkTrigger = winH * 0.75;
       if (footerRect.top <= parkTrigger) {
         targetParkRatio = Math.max(0, Math.min(1, (parkTrigger - footerRect.top) / (parkTrigger * 0.5)));
       }
     }
-    if (this.scrollProgress >= 0.91) {
-      targetParkRatio = Math.max(targetParkRatio, (this.scrollProgress - 0.91) / 0.09);
+    if (this.scrollProgress >= 0.89) {
+      targetParkRatio = Math.max(targetParkRatio, (this.scrollProgress - 0.89) / 0.11);
     }
 
     this.parkRatio += (targetParkRatio - this.parkRatio) * 0.16;
@@ -967,10 +972,10 @@ export class Car3DScene {
     const parkScreenX = winW * 0.5;
     this.targetScreenX = THREE.MathUtils.lerp(driveScreenX, parkScreenX, this.parkRatio);
 
-    // Target Scale: Sleek fully-visible scale when parked (fits complete 5.5m car on any screen)
+    // Target Scale: Sleek fully-visible scale when parked (fits complete 5.5m car cleanly on any screen)
     const driveScale = whitespace.targetScale;
-    const maxParkWidth = Math.min(820, winW * 0.62);
-    const parkScale = Math.min(this.baseScale * 0.62, (maxParkWidth / 1100) * this.baseScale);
+    const maxParkWidth = Math.min(760, winW * 0.58);
+    const parkScale = Math.min(this.baseScale * 0.58, (maxParkWidth / 1100) * this.baseScale);
     this.targetScale = THREE.MathUtils.lerp(driveScale, parkScale, this.parkRatio);
 
     // Smooth horizontal screen interpolation and dynamic scale lerping
@@ -1032,18 +1037,19 @@ export class Car3DScene {
 
     const normalScreenY = winH * 0.5;
     const trackLineEl = document.querySelector('.staging-track-line');
-    const apronEl = document.querySelector('.footer-staging-apron');
+    const stagingSectionEl = document.querySelector('.parking-staging-section');
     let safeParkScreenY = winH * 0.45;
 
     if (trackLineEl) {
       const trackRect = trackLineEl.getBoundingClientRect();
-      // Sit cleanly right on top of the staging track line, fully unoccluded by cards above:
-      safeParkScreenY = Math.max(winH * 0.18, Math.min(winH * 0.72, trackRect.top - 42));
-    } else if (apronEl) {
-      const apronRect = apronEl.getBoundingClientRect();
-      safeParkScreenY = Math.max(winH * 0.18, Math.min(winH * 0.72, apronRect.top + 70));
-    } else {
-      safeParkScreenY = Math.max(winH * 0.18, Math.min(winH * 0.65, footerTop + 60));
+      // Sit cleanly right on top of the staging track line, fully unoccluded above the dark footer:
+      safeParkScreenY = Math.max(winH * 0.15, Math.min(winH * 0.68, trackRect.top - 55));
+    } else if (stagingSectionEl) {
+      const stageRect = stagingSectionEl.getBoundingClientRect();
+      safeParkScreenY = Math.max(winH * 0.15, Math.min(winH * 0.68, stageRect.top + 70));
+    } else if (footerEl) {
+      const footerRect = footerEl.getBoundingClientRect();
+      safeParkScreenY = Math.max(winH * 0.15, Math.min(winH * 0.65, footerRect.top - 120));
     }
     const targetScreenY = THREE.MathUtils.lerp(normalScreenY, safeParkScreenY, this.parkRatio);
     const viewOffsetY = (winH * 0.5) - (targetScreenY - parallaxY);
