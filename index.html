@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX LABS // Formula 1 & Competition RC Experience</title>
+  <meta name="description" content="State of the art 1:8 competition RC engineering, immersive indoor Formula 1 Experience Center, and legendary F1 collector museum.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- HUD Audio & Telemetry Banner -->
+  <header class="apex-header">
+    <div class="header-left">
+      <a href="#" class="brand-logo">
+        <span class="logo-bracket">[</span>
+        <span class="logo-accent">APEX</span>
+        <span class="logo-sub">LABS</span>
+        <span class="logo-bracket">]</span>
+        <span class="logo-badge">F1 // RC 1:8</span>
+      </a>
+      <div class="hud-telemetry-badge">
+        <span class="pulse-dot"></span>
+        <span class="mono-code">TELEMETRY: ONLINE</span>
+        <span class="separator">/</span>
+        <span class="mono-code" id="hud-rpm-counter">2,200 RPM</span>
+      </div>
+    </div>
+
+    <nav class="apex-nav">
+      <a href="#hero" class="nav-link active" data-nav="hero">OVERVIEW</a>
+      <a href="#engineering" class="nav-link" data-nav="engineering">ENGINEERING</a>
+      <a href="#experience" class="nav-link" data-nav="experience">EXPERIENCE CENTER</a>
+      <a href="#collection" class="nav-link" data-nav="collection">F1 VAULT</a>
+      <a href="#configurator" class="nav-link" data-nav="configurator">CONFIGURATOR</a>
+      <a href="#store" class="nav-link" data-nav="store">STORE</a>
+    </nav>
+
+    <div class="header-right">
+      <!-- Audio Toggle Button with Realtime Equalizer Visualizer -->
+      <button class="hud-btn audio-toggle-btn" id="audio-toggle" title="Toggle Synthesized Engine & UI SFX">
+        <span class="audio-waves" id="audio-waves">
+          <span class="bar bar-1"></span>
+          <span class="bar bar-2"></span>
+          <span class="bar bar-3"></span>
+        </span>
+        <span class="btn-text" id="audio-label">SOUND: OFF</span>
+      </button>
+
+      <!-- Cart Button -->
+      <button class="hud-btn cart-btn" id="cart-toggle-btn">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-label">CART</span>
+        <span class="cart-badge" id="cart-counter">0</span>
+      </button>
+
+      <!-- Book CTA -->
+      <a href="#experience" class="hud-cta-btn" id="header-book-cta">
+        <span>BOOK TRACK PASS</span>
+        <span class="cta-arrow">→</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Interactive 3D Formula 1 WebGL Canvas Stage (0-360° Star Showcase) -->
+  <div id="canvas-container" class="webgl-canvas-container"></div>
+
+  <!-- Pinned Motorsport HUD Overlay -->
+  <div class="canvas-hud-overlay">
+    <!-- Top coordinates bar with 360° live angle tracker (Positioned cleanly on right over car) -->
+    <div class="hud-top-bar">
+      <div class="hud-metric">
+        <span class="label">360° CAMERA ORBIT</span>
+        <span class="value highlight" id="hud-orbit-val">022° // NOSE 3/4</span>
+      </div>
+      <div class="hud-metric">
+        <span class="label">SPEED TELEMETRY</span>
+        <span class="value" id="hud-downforce">135 KM/H MAX</span>
+      </div>
+      <div class="hud-metric">
+        <span class="label">DRS STATUS</span>
+        <span class="value active" id="hud-drs">ACTIVE [OPEN]</span>
+      </div>
+      <div class="hud-metric">
+        <span class="label">POWER CELL</span>
+        <span class="value" id="hud-cell">6S // 22.2V 98%</span>
+      </div>
+    </div>
+
+    <!-- Scrubber Timeline Bar (Signature interactive scrubbing) -->
+    <div class="timeline-scrubber-wrapper">
+      <div class="timeline-meta">
+        <span class="mono-label" id="timeline-stage-name">STAGE 01 // 0° FRONT NOSE</span>
+        <span class="timeline-pct" id="timeline-pct">0%</span>
+      </div>
+      <div class="scrubber-track" id="scrubber-track">
+        <div class="scrubber-fill" id="scrubber-fill"></div>
+        <div class="scrubber-handle" id="scrubber-handle"></div>
+      </div>
+    </div>
+
+    <!-- Centered Bottom 3D Viewport Controls Dock (Zero content card overlap) -->
+    <div class="viewport-controls-dock">
+      <!-- 3D Camera Angles Bar -->
+      <div class="camera-presets-bar">
+        <span class="preset-title">360° VIEW:</span>
+        <button class="preset-pill active" data-preset="drift">0° FRONT</button>
+        <button class="preset-pill" data-preset="side">90° PROFILE</button>
+        <button class="preset-pill" data-preset="rear">180° REAR</button>
+        <button class="preset-pill" data-preset="cockpit">270° FLANK</button>
+        <button class="preset-pill" data-preset="top">TOP AERO</button>
+        <button class="preset-pill" id="btn-orbit-toggle">DRAG ORBIT</button>
+      </div>
+
+      <!-- Interactive 3D Camera & Dynamics Toolbar -->
+      <div class="canvas-tools-panel">
+        <button class="tool-btn" id="btn-auto-orbit" title="Toggle Cinematic 360° Auto-Orbit">
+          <span class="tool-icon">🔄</span>
+          <span class="tool-text">AUTO-ORBIT: OFF</span>
+        </button>
+        <button class="tool-btn" id="btn-reset-cam" title="Reset Camera to Default Perspective">
+          <span class="tool-icon">🎯</span>
+          <span class="tool-text">RESET VIEW</span>
+        </button>
+        <button class="tool-btn active" id="btn-toggle-hotspots" title="Toggle Telemetry Engineering Pins">
+          <span class="tool-icon">📍</span>
+          <span class="tool-text">HOTSPOTS</span>
+        </button>
+        <button class="tool-btn btn-turbo" id="btn-flyby" title="Execute dynamic 360° cinematic flyby over content">
+          <span class="tool-icon">🚀</span>
+          <span class="tool-text">CINEMATIC FLYBY</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Speedometer HUD -->
+    <div class="hud-speedometer">
+      <div class="speed-dial">
+        <span class="speed-number" id="speedometer-val">0</span>
+        <span class="speed-unit">KM/H</span>
+      </div>
+      <div class="gear-tag" id="gear-indicator">N</div>
+      <div class="rpm-bar-container">
+        <div class="rpm-bar" id="rpm-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable Story Sections -->
+  <main class="page-content">
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="story-section hero-section">
+      <div class="section-inner hero-inner">
+        <div class="hero-badge">
+          <span class="badge-icon">▲</span>
+          <span class="badge-text">FORMULA 1 SCALE DYNAMICS & RC INNOVATION</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="title-line">SCALE VELOCITY.</span>
+          <span class="title-line gradient-text">PURE ADRENALINE.</span>
+        </h1>
+
+        <p class="hero-desc">
+          Engineered for competition pilots and motorsport purists. We bridge 1:8 scale high-voltage brushless racing with legendary Formula 1 pedigree, cutting-edge telemetry, and world-class indoor circuit experiences.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#engineering" class="primary-btn">
+            <span>EXPLORE THE CHASSIS</span>
+            <span class="btn-arrow">→</span>
+          </a>
+          <button class="secondary-btn" id="hero-rev-btn">
+            <span class="btn-flash">⚡</span>
+            <span>REV V6 TURBO HYBRID</span>
+          </button>
+        </div>
+
+        <!-- Telemetry Key Metrics Strip -->
+        <div class="hero-metrics-strip">
+          <div class="metric-card">
+            <span class="metric-val">135<small>KM/H</small></span>
+            <span class="metric-desc">Scale Top Velocity</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">1.75<small>SEC</small></span>
+            <span class="metric-desc">0-100 KM/H Acceleration</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">38,000<small>RPM</small></span>
+            <span class="metric-desc">6S Brushless Motor Limit</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">1,200<small>M²</small></span>
+            <span class="metric-desc">Indoor Asphalt GP Circuit</span>
+          </div>
+        </div>
+
+        <!-- Scroll down indicator -->
+        <div class="scroll-cue">
+          <span class="cue-mouse"></span>
+          <span class="cue-label">SCROLL TO INSPECT AERODYNAMICS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANIME.JS STAGGER LAB ROOT -->
+    <div id="anime-stagger-root"></div>
+
+    <!-- SECTION 2: ENGINEERING & RC ANATOMY -->
+    <section id="engineering" class="story-section engineering-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-header-top-row">
+            <div>
+              <span class="section-num">02 // ARCHITECTURE</span>
+              <h2 class="section-heading">RACE ENGINEERING AT SCALE</h2>
+            </div>
+            <button class="arch-layout-flip-btn" id="arch-layout-flip-btn" type="button" title="Flip content alignment between Right and Left">
+              <span class="flip-icon">⇋</span>
+              <span class="flip-label">CAR ON LEFT</span>
+            </button>
+          </div>
+          <p class="section-lead">Every curve, carbon weave, and damper angle is calibrated through CFD simulation and live track telematics.</p>
+        </div>
+
+        <!-- Horizontal Subsystem Selector Tabs -->
+        <div class="engineering-tabs-bar" role="tablist">
+          <button class="arch-tab-btn active" data-tab="all" data-camera="drift" type="button">
+            <span class="tab-dot"></span> ALL ARCHITECTURE
+          </button>
+          <button class="arch-tab-btn" data-tab="aero" data-camera="front" type="button">
+            <span class="tab-dot"></span> 01 // AERODYNAMICS
+          </button>
+          <button class="arch-tab-btn" data-tab="suspension" data-camera="side" type="button">
+            <span class="tab-dot"></span> 02 // SUSPENSION
+          </button>
+          <button class="arch-tab-btn" data-tab="power" data-camera="rear" type="button">
+            <span class="tab-dot"></span> 03 // POWERTRAIN
+          </button>
+          <button class="arch-tab-btn" data-tab="specs" data-camera="top" type="button">
+            <span class="tab-dot"></span> 04 // FIA PARITY
+          </button>
+        </div>
+
+        <div class="engineering-grid">
+          <!-- Feature Card 1: AERODYNAMICS -->
+          <div class="eng-card" data-system="aero" data-camera="front">
+            <div class="eng-card-top">
+              <div class="eng-badge">01 // AERODYNAMICS</div>
+              <span class="eng-cam-cue">FOCUS: NOSE & FRONT WING ↗</span>
+            </div>
+            <h3>Ground Effect Venturi Floor & Active Wing</h3>
+            <p>Underfloor venturi tunnels generate real downforce, sucking the 1:8 chassis to the asphalt with over 40kg of aerodynamic load at speed.</p>
+            <ul class="spec-bullets">
+              <li>Multi-tier front wing with vortex shedding endplates</li>
+              <li>Functional DRS flap actuated via micro digital servo</li>
+              <li>Rear venturi strakes for clean turbulent wake detachment</li>
+            </ul>
+          </div>
+
+          <!-- Feature Card 2: SUSPENSION -->
+          <div class="eng-card" data-system="suspension" data-camera="side">
+            <div class="eng-card-top">
+              <div class="eng-badge">02 // SUSPENSION</div>
+              <span class="eng-cam-cue">FOCUS: STARBOARD FLANK ↗</span>
+            </div>
+            <h3>Pushrod Double Wishbones</h3>
+            <p>CNC machined 7075 aluminum and Toray T700 carbon fiber wishbones absorb curb impacts while maintaining millimeter-precise contact patch geometry.</p>
+            <ul class="spec-bullets">
+              <li>Threaded oil-filled aluminum coilover dampers</li>
+              <li>Adjustable camber, toe-in, and roll center kinematics</li>
+              <li>Floating anti-roll bars front and rear</li>
+            </ul>
+          </div>
+
+          <!-- Feature Card 3: POWERTRAIN -->
+          <div class="eng-card" data-system="power" data-camera="rear">
+            <div class="eng-card-top">
+              <div class="eng-badge">03 // POWERTRAIN</div>
+              <span class="eng-cam-cue">FOCUS: REAR DIFFUSER & MOTOR ↗</span>
+            </div>
+            <h3>6S Brushless High-Voltage Drive</h3>
+            <p>Sensor-equipped 3800KV 4-pole motor coupled with a 160A ESC delivers instantaneous throttle response and sub-2 second launch times.</p>
+            <ul class="spec-bullets">
+              <li>Graphene 6S 22.2V 130C discharge LiPo cells</li>
+              <li>Active thermal heat-sink cooling blower</li>
+              <li>Real-time telemetry return: RPM, Voltage, Temperature</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Interactive Specs Comparison Box -->
+        <div class="specs-comparison-box" data-system="specs">
+          <div class="box-header">
+            <h3>SPECIFICATIONS COMPARISON: 1:8 SCALE COMPETITION VS 1:1 FORMULA 1</h3>
+            <span class="box-tag">FIA & RC RACING REGULATION AUDIT</span>
+          </div>
+          <div class="specs-table-wrapper">
+            <table class="specs-table">
+              <thead>
+                <tr>
+                  <th>METRIC</th>
+                  <th>APEX 1:8 COMPETITION FORMULA</th>
+                  <th>1:1 MODERN FORMULA 1 CAR</th>
+                  <th>SCALE RATIO PARITY</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Power-to-Weight</td>
+                  <td><strong>3.2 HP / KG</strong></td>
+                  <td>1.28 HP / KG</td>
+                  <td><span class="tag-par green">+150% Exceeds 1:1</span></td>
+                </tr>
+                <tr>
+                  <td>0 - 100 KM/H</td>
+                  <td><strong>1.75 Seconds</strong></td>
+                  <td>2.10 Seconds</td>
+                  <td><span class="tag-par green">Instant Torque Dominance</span></td>
+                </tr>
+                <tr>
+                  <td>Chassis Material</td>
+                  <td><strong>4.0mm Toray T700 Dry Carbon</strong></td>
+                  <td>Carbon-Honeycomb Monocoque</td>
+                  <td><span class="tag-par">Equivalent Torsional Rigidity</span></td>
+                </tr>
+                <tr>
+                  <td>Telemetry Freq</td>
+                  <td><strong>2.4GHz FHSS Realtime (100Hz)</strong></td>
+                  <td>Encrypted UHF Pit Telemetry</td>
+                  <td><span class="tag-par">Live Data Streaming</span></td>
+                </tr>
+                <tr>
+                  <td>Braking G-Force</td>
+                  <td><strong>-3.8 G (Scale Equivalent)</strong></td>
+                  <td>-5.5 G</td>
+                  <td><span class="tag-par">Carbon-Ceramic Caliper Clamping</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: THE FORMULA 1 HERITAGE VAULT -->
+    <section id="collection" class="story-section collection-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-num">03 // HERITAGE VAULT</span>
+          <h2 class="section-heading">FORMULA 1 ICONIC CHASSIS COLLECTION</h2>
+          <p class="section-lead">Explore our museum-grade collection of championship-winning chassis, full-scale monocoques, and precision limited 1:8 static replicas.</p>
+        </div>
+
+        <!-- 3 Feature Cards utilizing the uploaded photos -->
+        <div class="collection-cards-grid">
+
+          <!-- Card 1: Red Bull RB19 / RB20 (User provided top view image) -->
+          <div class="f1-card" data-f1="redbull">
+            <div class="f1-card-media">
+              <img src="/assets/f1-redbull-top.jpg" alt="Red Bull Racing F1 Aerodynamic Top View" class="f1-img" loading="lazy">
+              <span class="media-tag">1:1 & 1:8 SCALE REPLICA</span>
+            </div>
+            <div class="f1-card-content">
+              <div class="card-brand">RED BULL RACING // AERODYNAMIC BENCHMARK</div>
+              <h3>RB19 Ground Effect Monocoque</h3>
+              <p>The most dominant car in Formula 1 history with 21 grand prix wins in a single season. Engineered with revolutionary venturi floor geometry and undercut sidepod channels.</p>
+              
+              <div class="f1-specs-row">
+                <div class="f1-spec">
+                  <span class="lbl">POWER</span>
+                  <span class="val">1,020 HP</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">POWERTRAIN</span>
+                  <span class="val">1.6L V6 TURBO HYBRID</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">DOWNFORCE</span>
+                  <span class="val">1,450 KG @ 250 KM/H</span>
+                </div>
+              </div>
+
+              <div class="card-foot">
+                <button class="f1-action-btn" data-action="inspect-rb">INSPECT 3D BLUEPRINT</button>
+                <button class="f1-action-btn secondary" data-action="livery-rb">APPLY LIVERY TO 3D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Mercedes AMG F1 W12 / W13 Stealth Spec (User provided side view) -->
+          <div class="f1-card" data-f1="mercedes">
+            <div class="f1-card-media">
+              <img src="/assets/f1-mercedes-side.jpg" alt="Mercedes AMG F1 Side Profile Aerodynamic Streamline" class="f1-img" loading="lazy">
+              <span class="media-tag">FULL SCALE DISPLAY CHASSIS</span>
+            </div>
+            <div class="f1-card-content">
+              <div class="card-brand">MERCEDES-AMG PETRONAS // SILVER ARROWS</div>
+              <h3>W12 E Performance Stealth Spec</h3>
+              <p>The stealth carbon black livery built to celebrate speed and precision. Featuring extreme tight engine packaging, carbon swept front suspension, and rear diffuser DRS integration.</p>
+              
+              <div class="f1-specs-row">
+                <div class="f1-spec">
+                  <span class="lbl">TOP SPEED</span>
+                  <span class="val">358 KM/H</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">THERMAL EFF</span>
+                  <span class="val">> 50% THERMAL</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">WEIGHT</span>
+                  <span class="val">752 KG FIA MIN</span>
+                </div>
+              </div>
+
+              <div class="card-foot">
+                <button class="f1-action-btn" data-action="inspect-merc">INSPECT 3D BLUEPRINT</button>
+                <button class="f1-action-btn secondary" data-action="livery-merc">APPLY LIVERY TO 3D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Stealth Prototype Monocoque (User provided stealth top view) -->
+          <div class="f1-card" data-f1="stealth">
+            <div class="f1-card-media">
+              <img src="/assets/f1-stealth-top.jpg" alt="Stealth Carbon F1 Prototype Monocoque Top View" class="f1-img" loading="lazy">
+              <span class="media-tag">PROTOTYPE R&D CHASSIS</span>
+            </div>
+            <div class="f1-card-content">
+              <div class="card-brand">APEX PROTOTYPE // EXPERIMENTAL LABS</div>
+              <h3>Formula Carbon-X Monocoque</h3>
+              <p>Raw autoclave-cured carbon fiber test mule used in our wind tunnel and RC chassis development. Zero paint, pure unadulterated aerodynamic vortex optimization.</p>
+              
+              <div class="f1-specs-row">
+                <div class="f1-spec">
+                  <span class="lbl">CONSTRUCTION</span>
+                  <span class="val">100% PRE-PREG CARBON</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">DRAG COEFF</span>
+                  <span class="val">Cd 0.68</span>
+                </div>
+                <div class="f1-spec">
+                  <span class="lbl">SCALE MODEL</span>
+                  <span class="val">1:8 TELEMETRY READY</span>
+                </div>
+              </div>
+
+              <div class="card-foot">
+                <button class="f1-action-btn" data-action="inspect-stealth">INSPECT 3D BLUEPRINT</button>
+                <button class="f1-action-btn secondary" data-action="livery-stealth">APPLY LIVERY TO 3D</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: THE EXPERIENCE CENTER & INDOOR CIRCUIT -->
+    <section id="experience" class="story-section experience-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-num">04 // EXPERIENCE CENTER</span>
+          <h2 class="section-heading">APEX INTERNATIONAL MOTORSPORT ARENA</h2>
+          <p class="section-lead">Step into a 1,200m² purpose-built motorsport entertainment complex featuring an indoor competition RC asphalt circuit, professional F1 motion simulators, and pit lane telemetry lounge.</p>
+        </div>
+
+        <!-- Experience Center Showcase Banner with Video / Image -->
+        <div class="experience-showcase-banner">
+          <div class="showcase-visual">
+            <img class="exp-video" src="/assets/experience-center.jpg" alt="APEX Indoor Circuit and Experience Center">
+            <div class="video-overlay-gradient"></div>
+            <div class="video-hud-tag">
+              <span class="rec-dot"></span>
+              <span>LIVE TRACK FEED // PIT LANE CAM 04</span>
+            </div>
+          </div>
+          <div class="showcase-content">
+            <div class="exp-highlight-badge">WORLD CLASS FACILITY</div>
+            <h3>Where Fans Become Drivers</h3>
+            <p>Whether you're piloting a 130 km/h 1:8 competition RC formula car down the 45-meter straight or setting qualifying hot laps in our six-axis hydraulic F1 simulator pods, the Experience Center delivers unfiltered motorsport thrills.</p>
+            
+            <div class="exp-feature-list">
+              <div class="exp-feat">
+                <span class="feat-icon">🏁</span>
+                <div>
+                  <strong>Indoor Asphalt Circuit</strong>
+                  <span>High-grip FIA-grade indoor track with 18° banked loop and RFID transponder timing down to 1/1000th second.</span>
+                </div>
+              </div>
+              <div class="exp-feat">
+                <span class="feat-icon">🕹️</span>
+                <div>
+                  <strong>Pro F1 Simulator Pods</strong>
+                  <span>Direct Drive 25Nm force feedback, carbon formula steering wheels, active hydraulic brake pedals, and triple 4K 144Hz wraparound displays.</span>
+                </div>
+              </div>
+              <div class="exp-feat">
+                <span class="feat-icon">🔧</span>
+                <div>
+                  <strong>Pit Bay Tuning Garage</strong>
+                  <span>Work alongside factory engineers to tune suspension camber, gear ratios, aero wings, and test motor dyno outputs.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Circuit Map with Live Ghost Car & Telemetry -->
+        <div class="circuit-interactive-container">
+          <div class="circuit-header">
+            <div>
+              <h3>APEX INDOOR GRAND PRIX CIRCUIT MAP</h3>
+              <p>Click on any turn apex to view telemetry notes, braking zones, and racing line guidance.</p>
+            </div>
+            <div class="circuit-live-telemetry">
+              <div class="tel-item">
+                <span class="tel-label">SECTOR:</span>
+                <span class="tel-value" id="circuit-sector-val">SECTOR 1</span>
+              </div>
+              <div class="tel-item">
+                <span class="tel-label">INSTANT SPEED:</span>
+                <span class="tel-value highlight" id="circuit-speed-val">124 KM/H</span>
+              </div>
+              <div class="tel-item">
+                <span class="tel-label">THROTTLE:</span>
+                <div class="throttle-bar-wrap">
+                  <div class="throttle-bar-fill" id="circuit-throttle-fill" style="width: 85%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="circuit-canvas-wrapper">
+            <canvas id="circuit-canvas"></canvas>
+            <!-- Dynamic Corner Info Popup -->
+            <div id="corner-info-box" class="corner-info-container">
+              <div class="corner-popup default-msg">
+                <span class="hint-icon">ⓘ</span>
+                <span>Click any yellow corner marker on the circuit to load sector telematics and pro driving notes.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Track Pass Booking Module -->
+        <div class="booking-module" id="booking-module">
+          <div class="booking-title-bar">
+            <h3>BOOK YOUR EXPERIENCE PASS</h3>
+            <span class="badge-slot">INSTANT CONFIRMATION // NFC PIT PASS</span>
+          </div>
+
+          <form id="track-booking-form" class="booking-form">
+            <div class="form-group">
+              <label for="book-driver">DRIVER CALLSIGN / NAME</label>
+              <input type="text" id="book-driver" placeholder="e.g. Max V. / Apex-01" required value="Apex Driver">
+            </div>
+
+            <div class="form-group">
+              <label for="book-package">EXPERIENCE PACKAGE</label>
+              <select id="book-package" required>
+                <option value="rc-track">Apex RC Pro Track Day (90 Mins Track Access + Car Rental) - $49</option>
+                <option value="sim-f1">F1 Sim Rig Qualifying Session (60 Mins Triple-Screen) - $59</option>
+                <option value="combo" selected>Full Masterclass: 1:8 Scale RC + F1 Sim Rig + VIP Lounge - $119</option>
+                <option value="vip-pit">VIP Pit Pass & Private Mechanic Tuning Workshop - $199</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="book-date">DATE</label>
+              <input type="date" id="book-date" required>
+            </div>
+
+            <div class="form-group">
+              <label for="book-slot">TIME SLOT</label>
+              <select id="book-slot" required>
+                <option value="11:00">11:00 AM - 01:00 PM (Morning Warm-Up)</option>
+                <option value="14:00" selected>02:00 PM - 04:00 PM (Prime Qualifying)</option>
+                <option value="17:00">05:00 PM - 07:00 PM (Sunset Grand Prix)</option>
+                <option value="20:00">08:00 PM - 10:00 PM (Neon Night Racing)</option>
+              </select>
+            </div>
+
+            <div class="form-action">
+              <button type="submit" class="primary-btn booking-submit-btn">
+                <span>CONFIRM & GENERATE DIGITAL PIT PASS</span>
+                <span class="btn-arrow">→</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 5: INTERACTIVE 3D CONFIGURATOR -->
+    <section id="configurator" class="story-section configurator-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-num">05 // CUSTOM LAB</span>
+          <h2 class="section-heading">INTERACTIVE 3D BESPOKE CONFIGURATOR</h2>
+          <p class="section-lead">Tailor your competition RC formula car. Changes update immediately on the 3D car above.</p>
+        </div>
+
+        <div class="configurator-controls-card">
+          <!-- Livery Selection -->
+          <div class="config-block">
+            <span class="config-label">RACING LIVERY:</span>
+            <div class="config-pills" id="livery-pills">
+              <button class="config-pill active" data-livery="redbull">
+                <span class="color-swatch rb-swatch"></span>
+                <span>RED BULL NAVY & GOLD</span>
+              </button>
+              <button class="config-pill" data-livery="mercedes">
+                <span class="color-swatch merc-swatch"></span>
+                <span>MERCEDES STEALTH CARBON</span>
+              </button>
+              <button class="config-pill" data-livery="cyberpunk">
+                <span class="color-swatch cyber-swatch"></span>
+                <span>CYBERPUNK NEON IRIDESCENT</span>
+              </button>
+              <button class="config-pill" data-livery="ferrari">
+                <span class="color-swatch rosso-swatch"></span>
+                <span>SCUDERIA CORSA ROSSO</span>
+              </button>
+              <button class="config-pill" data-livery="gulf">
+                <span class="color-swatch gulf-swatch"></span>
+                <span>GULF RACING BLUE / ORANGE</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tire Compound Selection -->
+          <div class="config-block">
+            <span class="config-label">PIRELLI TIRE COMPOUND:</span>
+            <div class="config-pills" id="compound-pills">
+              <button class="config-pill active" data-compound="soft">
+                <span class="compound-dot c-soft"></span>
+                <span>C5 SOFT (RED - MAXIMUM GRIP)</span>
+              </button>
+              <button class="config-pill" data-compound="medium">
+                <span class="compound-dot c-medium"></span>
+                <span>C3 MEDIUM (YELLOW - BALANCED)</span>
+              </button>
+              <button class="config-pill" data-compound="hard">
+                <span class="compound-dot c-hard"></span>
+                <span>C1 HARD (WHITE - ENDURANCE)</span>
+              </button>
+              <button class="config-pill" data-compound="wet">
+                <span class="compound-dot c-wet"></span>
+                <span>WET WEATHER (BLUE - GROOVED)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Underglow LED Neon -->
+          <div class="config-block">
+            <span class="config-label">GROUND EFFECT CHASSIS UNDERGLOW:</span>
+            <div class="config-pills" id="underglow-pills">
+              <button class="config-pill active" data-underglow="0x00f0ff">
+                <span class="glow-dot cyan"></span>
+                <span>ELECTRIC CYAN</span>
+              </button>
+              <button class="config-pill" data-underglow="0xff1844">
+                <span class="glow-dot red"></span>
+                <span>VELOCITY RED</span>
+              </button>
+              <button class="config-pill" data-underglow="0xffb800">
+                <span class="glow-dot amber"></span>
+                <span>RACING AMBER</span>
+              </button>
+              <button class="config-pill" data-underglow="0x00ff88">
+                <span class="glow-dot lime"></span>
+                <span>NEON LIME</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="config-actions">
+            <button class="primary-btn" id="config-order-btn">
+              <span>ORDER CONFIGURED MACHINE</span>
+              <span class="btn-arrow">→</span>
+            </button>
+            <button class="secondary-btn" id="config-reset-btn">RESET TO FACTORY SPEC</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: PRO STORE & RC CATALOG -->
+    <section id="store" class="story-section store-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-num">06 // STORE & CATALOG</span>
+          <h2 class="section-heading">COMPETITION RC CARS & F1 SCALE REPLICAS</h2>
+          <p class="section-lead">Select your machine. Shipped track-ready with pre-glued competition tires, digital 2.4GHz radio, and full carbon chassis.</p>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="store-filter-bar">
+          <button class="store-filter active" data-filter="all">ALL MODELS</button>
+          <button class="store-filter" data-filter="formula">1:8 FORMULA RC</button>
+          <button class="store-filter" data-filter="touring">1:10 TOURING & DRIFT</button>
+          <button class="store-filter" data-filter="collector">COLLECTOR STATIC 1:8</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="products-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: LEADERBOARD & TELEMETRY -->
+    <section class="story-section leaderboard-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-num">07 // TRACK TELEMETRY</span>
+          <h2 class="section-heading">EXPERIENCE CENTER CIRCUIT LEADERBOARD</h2>
+          <p class="section-lead">Current fastest recorded lap times across 1:8 Competition RC and F1 Motion Simulators.</p>
+        </div>
+
+        <div class="leaderboard-table-card">
+          <div class="lb-header-row">
+            <span>POS</span>
+            <span>PILOT / CALLSIGN</span>
+            <span>CHASSIS CLASS</span>
+            <span>LAP TIME</span>
+            <span>TOP SPEED</span>
+            <span>STATUS</span>
+          </div>
+          <div class="lb-body" id="leaderboard-body">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER: LUXURY RACING PADDOCK TERMINAL -->
+    <footer class="apex-footer">
+      <!-- Dedicated Car Parking & Launch Staging Apron -->
+      <div class="footer-staging-apron">
+        <div class="staging-track-line">
+          <div class="grid-box-tag">
+            <span class="grid-pulse-dot"></span>
+            <span>PIT BOX 01 // STAGED & READY TO LAUNCH</span>
+          </div>
+          <div class="grid-track-stripes"></div>
+          <div class="grid-status-tag">FIA MONZA SPEEDWAY // 1:8 COMPETITION GRID</div>
+        </div>
+        <div class="staging-telemetry-strip">
+          <div class="stage-metric">
+            <span class="lbl">GRID STANCE:</span>
+            <strong class="gold">LEFT FACED // STAGED P1</strong>
+          </div>
+          <div class="stage-metric">
+            <span class="lbl">LAUNCH CONTROL:</span>
+            <strong class="armed" id="stage-launch-status">ARMED [2-STEP REV BURNOUT]</strong>
+          </div>
+          <div class="stage-metric">
+            <span class="lbl">REAR AXLE FLAME:</span>
+            <strong class="hot">CONTINUOUS SPARK ACTIVE</strong>
+          </div>
+          <div class="stage-metric">
+            <span class="lbl">PIT SPEED LIMIT:</span>
+            <strong>80 KM/H SPEEDWAY</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <span class="logo-bracket">[</span>
+            <span class="logo-accent">APEX</span>
+            <span class="logo-sub">LABS</span>
+            <span class="logo-bracket">]</span>
+            <span class="footer-badge">MONZA SPEC</span>
+          </div>
+          <p>The premier destination for 1:8 competition RC racing, Formula 1 heritage curation, and immersive motorsport simulator experiences.</p>
+          <div class="footer-coords">
+            <span class="coord-icon">📍</span>
+            <span class="mono-code">FACILITY COORDINATES: 45°37'14.2"N 9°16'51.8"E (MONZA CORRIDOR)</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>DIVISIONS</h4>
+          <a href="#engineering"><span class="link-arrow">▸</span> RC Engineering & CFD</a>
+          <a href="#experience"><span class="link-arrow">▸</span> Indoor GP Track Arena</a>
+          <a href="#collection"><span class="link-arrow">▸</span> Formula 1 Vault</a>
+          <a href="#store"><span class="link-arrow">▸</span> Pro Competition Store</a>
+          <a href="#configurator"><span class="link-arrow">▸</span> Bespoke 3D Studio</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>EXPERIENCE SESSIONS</h4>
+          <a href="#experience"><span class="link-arrow">▸</span> RC Track Day Pass <span class="session-tag">OPEN</span></a>
+          <a href="#experience"><span class="link-arrow">▸</span> F1 Motion Sim Rig <span class="session-tag">POPULAR</span></a>
+          <a href="#experience"><span class="link-arrow">▸</span> Corporate Grand Prix</a>
+          <a href="#experience"><span class="link-arrow">▸</span> Driver Academy & Telemetry</a>
+          <a href="#experience"><span class="link-arrow">▸</span> Pit Bay Mechanics Club</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>TELEMETRY NEWSLETTER</h4>
+          <p>Receive grand prix telemetry bulletins, lap-record alerts, and limited chassis drops.</p>
+          <form id="newsletter-form" class="footer-subscribe-form">
+            <input type="email" placeholder="driver@circuit.com" required>
+            <button type="submit">TRANSMIT ❯</button>
+          </form>
+          <div class="animejs-tribute">
+            <span>DESIGNED WITH ANIME.JS INSPIRED KINETIC MOTION</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="copy-text">© 2026 APEX LABS MOTORSPORT GROUP. ALL RIGHTS RESERVED.</div>
+        <div class="status-indicator">
+          <span class="status-pulse"></span>
+          <span>SYSTEM RUNNING 60FPS // WEBGL 2.0 APEX ENGINE ONLINE</span>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- SHOPPING CART SLIDE-OVER DRAWER -->
+  <div class="cart-drawer-overlay" id="cart-drawer-overlay"></div>
+  <aside class="cart-drawer" id="cart-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <h3>EQUIPMENT CART</h3>
+        <span class="drawer-count" id="drawer-items-count">(0 ITEMS)</span>
+      </div>
+      <button class="drawer-close-btn" id="drawer-close-btn">✕</button>
+    </div>
+
+    <div class="drawer-body" id="cart-items-container">
+      <div class="empty-cart-msg">
+        <span class="empty-icon">🏎️</span>
+        <h4>YOUR PIT CART IS EMPTY</h4>
+        <p>Explore our competition RC formula cars and 1:8 scale museum replicas.</p>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <div class="drawer-subtotal">
+        <span>SUBTOTAL</span>
+        <span class="subtotal-val" id="drawer-subtotal-val">$0.00</span>
+      </div>
+      <p class="drawer-notice">Trackside pickup available at Experience Center or DHL Express World Shipping.</p>
+      <button class="primary-btn checkout-btn" id="drawer-checkout-btn">
+        <span>PROCEED TO PIT CHECKOUT</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- DIGITAL PIT PASS MODAL (BOOKING CONFIRMATION) -->
+  <div class="modal-backdrop" id="booking-modal-backdrop">
+    <div class="pit-pass-modal">
+      <button class="modal-close-btn" id="booking-modal-close">✕</button>
+      <div class="pit-pass-card">
+        <div class="pass-header">
+          <div class="pass-logo">APEX // PIT LANE ACCESS PASS</div>
+          <div class="pass-badge">CONFIRMED</div>
+        </div>
+        <div class="pass-driver-section">
+          <span class="lbl">DRIVER CALLSIGN:</span>
+          <h2 id="pass-driver-name">APEX PILOT</h2>
+        </div>
+        <div class="pass-details-grid">
+          <div>
+            <span class="lbl">EXPERIENCE:</span>
+            <strong id="pass-experience-title">Masterclass: 1:8 RC + F1 Sim</strong>
+          </div>
+          <div>
+            <span class="lbl">DATE:</span>
+            <strong id="pass-date-val">2026-10-14</strong>
+          </div>
+          <div>
+            <span class="lbl">SESSION TIME:</span>
+            <strong id="pass-time-val">02:00 PM - 04:00 PM</strong>
+          </div>
+          <div>
+            <span class="lbl">PIT BOX:</span>
+            <strong>BAY 04 (MONZA WING)</strong>
+          </div>
+        </div>
+        <div class="pass-qr-strip">
+          <div class="barcode-graphic"></div>
+          <div class="pass-code">AUTH-ID: APX-9982-F1-RC</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="primary-btn" id="print-pass-btn">DOWNLOAD WALLET PASS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D BLUEPRINT INSPECTION MODAL -->
+  <div class="modal-backdrop" id="blueprint-modal-backdrop">
+    <div class="blueprint-modal">
+      <button class="modal-close-btn" id="blueprint-modal-close">✕</button>
+      <div class="blueprint-content">
+        <div class="blueprint-header">
+          <span class="bp-tag">AERODYNAMIC TELEMETRY BLUEPRINT</span>
+          <h2 id="bp-title">RED BULL RACING RB19 // CHASSIS SPEC</h2>
+        </div>
+        <div class="blueprint-body">
+          <div class="bp-img-wrap">
+            <img id="bp-image" src="/assets/f1-redbull-top.jpg" alt="Chassis Blueprint" class="bp-img">
+            <div class="bp-crosshair ch-1" style="top: 25%; left: 30%;">
+              <span class="ch-ping"></span>
+              <span class="ch-text">AERO DIFFUSER VORTEX</span>
+            </div>
+            <div class="bp-crosshair ch-2" style="top: 55%; left: 65%;">
+              <span class="ch-ping"></span>
+              <span class="ch-text">GROUND EFFECT TUNNELS</span>
+            </div>
+            <div class="bp-crosshair ch-3" style="top: 75%; left: 45%;">
+              <span class="ch-ping"></span>
+              <span class="ch-text">TITANIUM HALO STRUT</span>
+            </div>
+          </div>
+          <div class="bp-info" id="bp-info-text">
+            <!-- Dynamic Blueprint Details -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
