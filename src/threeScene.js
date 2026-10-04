@@ -424,6 +424,7 @@ export class Car3DScene {
 
         this.carMeshes = [];
         this.bodyMaterials = [];
+        this.accentMaterials = [];
 
         model.traverse((child) => {
           if (child.isMesh) {
@@ -432,12 +433,21 @@ export class Car3DScene {
             this.carMeshes.push(child);
 
             if (child.material) {
-              const mat = child.material;
-              mat.roughness = Math.min(0.65, Math.max(0.18, mat.roughness || 0.32));
-              mat.metalness = Math.min(0.88, Math.max(0.2, mat.metalness || 0.55));
-              mat.envMapIntensity = 1.4;
-              mat.needsUpdate = true;
-              this.bodyMaterials.push(mat);
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              mats.forEach((mat) => {
+                mat.roughness = Math.min(0.65, Math.max(0.18, mat.roughness || 0.32));
+                mat.metalness = Math.min(0.88, Math.max(0.2, mat.metalness || 0.55));
+                mat.envMapIntensity = 1.4;
+                mat.needsUpdate = true;
+
+                const name = mat.name || '';
+                // Distinct accent aero components: Front wing flaps (009), Rear wing & endplates (007), Halo (008), Cockpit/mirrors (002)
+                if (name.includes('009') || name.includes('007') || name.includes('008') || name.includes('002')) {
+                  this.accentMaterials.push(mat);
+                } else {
+                  this.bodyMaterials.push(mat);
+                }
+              });
             }
           }
         });
@@ -794,37 +804,66 @@ export class Car3DScene {
     this.currentLivery = liveryKey;
     if (!this.bodyMaterials || this.bodyMaterials.length === 0) return;
 
-    let tintColor = 0xF3E6D5;
+    let bodyColor = 0xF3E6D5;
+    let accentColor = 0xF3E6D5;
     let underglowColor = 0x800020;
 
     switch (liveryKey) {
       case 'redbull':
       case 'desert':
-        tintColor = 0xF3E6D5;
+        bodyColor = 0xF3E6D5;
+        accentColor = 0xF3E6D5;
         underglowColor = 0x800020;
         break;
       case 'mercedes':
-        tintColor = 0x800020;
-        underglowColor = 0x5e0017;
+        // User requested: car color 5003C0 (deep royal purple) and some parts FFC400 (bright golden amber)
+        bodyColor = 0x5003C0;
+        accentColor = 0xFFC400;
+        underglowColor = 0xFFC400;
         break;
       case 'cyberpunk':
-        tintColor = 0x5e0017;
-        underglowColor = 0x800020;
+        bodyColor = 0x12544F;
+        accentColor = 0x00f0ff;
+        underglowColor = 0x00f0ff;
         break;
       case 'ferrari':
-        tintColor = 0x800020;
-        underglowColor = 0x5e0017;
+        bodyColor = 0xE11A45;
+        accentColor = 0xffebee;
+        underglowColor = 0xff1744;
         break;
       case 'gulf':
-        tintColor = 0xF3E6D5;
-        underglowColor = 0x800020;
+        bodyColor = 0x118AB2;
+        accentColor = 0xFF8FB7;
+        underglowColor = 0xFF8FB7;
+        break;
+      case 'mclaren':
+        bodyColor = 0xFF7300;
+        accentColor = 0x00D4FF;
+        underglowColor = 0xFF7300;
+        break;
+      case 'aston':
+        bodyColor = 0x00594F;
+        accentColor = 0xCCFF00;
+        underglowColor = 0xCCFF00;
+        break;
+      case 'gold':
+        bodyColor = 0xD4AF37;
+        accentColor = 0x1A1A1A;
+        underglowColor = 0xFFD700;
         break;
     }
 
     this.bodyMaterials.forEach((mat) => {
-      mat.color.setHex(tintColor);
+      mat.color.setHex(bodyColor);
       mat.needsUpdate = true;
     });
+
+    if (this.accentMaterials && this.accentMaterials.length > 0) {
+      this.accentMaterials.forEach((mat) => {
+        mat.color.setHex(accentColor);
+        mat.needsUpdate = true;
+      });
+    }
 
     if (this.chassisLight) {
       this.chassisLight.color.setHex(underglowColor);
@@ -832,19 +871,25 @@ export class Car3DScene {
   }
 
   setTireCompound(compoundKey) {
-    let tireGlow = 0x800020;
+    let tireGlow = 0xff1744;
     switch (compoundKey) {
       case 'soft':
-        tireGlow = 0x800020;
+        tireGlow = 0xff1744;
         break;
       case 'medium':
-        tireGlow = 0xb8860b;
+        tireGlow = 0xffb800;
         break;
       case 'hard':
-        tireGlow = 0xF3E6D5;
+        tireGlow = 0xffffff;
         break;
       case 'wet':
-        tireGlow = 0x4682b4;
+        tireGlow = 0x00b0ff;
+        break;
+      case 'intermediate':
+        tireGlow = 0x00e676;
+        break;
+      case 'hypersoft':
+        tireGlow = 0xff2a85;
         break;
     }
     if (this.chassisLight) {

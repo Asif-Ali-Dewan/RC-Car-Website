@@ -36,7 +36,7 @@
     <nav class="apex-nav">
       <a href="#hero" class="nav-link active" data-nav="hero">OVERVIEW</a>
       <a href="#engineering" class="nav-link" data-nav="engineering">ENGINEERING</a>
-      <a href="#experience" class="nav-link" data-nav="experience">EXPERIENCE CENTER</a>
+      <a href="#experience" class="nav-link" data-nav="experience">EXPERIENCE</a>
       <a href="#collection" class="nav-link" data-nav="collection">F1 VAULT</a>
       <a href="#configurator" class="nav-link" data-nav="configurator">CONFIGURATOR</a>
       <a href="#store" class="nav-link" data-nav="store">STORE</a>
@@ -478,11 +478,13 @@
         <!-- Experience Center Showcase Banner with Video / Image -->
         <div class="experience-showcase-banner">
           <div class="showcase-visual">
-            <img class="exp-video" src="/assets/experience-center.jpg" alt="APEX Indoor Circuit and Experience Center">
+            <video class="exp-video" autoplay muted loop playsinline poster="/assets/experience-center.jpg">
+              <source src="/assets/rc-car-podium.mp4" type="video/mp4">
+            </video>
             <div class="video-overlay-gradient"></div>
             <div class="video-hud-tag">
               <span class="rec-dot"></span>
-              <span>LIVE TRACK FEED // PIT LANE CAM 04</span>
+              <span>LIVE TRACK FEED // RC PODIUM ARENA</span>
             </div>
           </div>
           <div class="showcase-content">
@@ -635,7 +637,19 @@
               </button>
               <button class="config-pill" data-livery="gulf">
                 <span class="color-swatch gulf-swatch"></span>
-                <span>GULF RACING BLUE / ORANGE</span>
+                <span>GULF RACING BLUE / PINK</span>
+              </button>
+              <button class="config-pill" data-livery="mclaren">
+                <span class="color-swatch mclaren-swatch"></span>
+                <span>MCLAREN PAPAYA ORANGE & CYAN</span>
+              </button>
+              <button class="config-pill" data-livery="aston">
+                <span class="color-swatch aston-swatch"></span>
+                <span>ASTON RACING GREEN & LIME</span>
+              </button>
+              <button class="config-pill" data-livery="gold">
+                <span class="color-swatch gold-swatch"></span>
+                <span>VALKYRIE 24K GOLD & CARBON</span>
               </button>
             </div>
           </div>
@@ -659,6 +673,14 @@
               <button class="config-pill" data-compound="wet">
                 <span class="compound-dot c-wet"></span>
                 <span>WET WEATHER (BLUE - GROOVED)</span>
+              </button>
+              <button class="config-pill" data-compound="intermediate">
+                <span class="compound-dot c-inter"></span>
+                <span>INTERMEDIATE (GREEN - DAMP TRACK)</span>
+              </button>
+              <button class="config-pill" data-compound="hypersoft">
+                <span class="compound-dot c-hypersoft"></span>
+                <span>C0 HYPERSOFT (PINK - TIME ATTACK)</span>
               </button>
             </div>
           </div>

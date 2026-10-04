@@ -139,6 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 14. Architecture Section 02 Subsystem Tabs & Flip Alignment
   setupArchitectureSection(carScene);
+
+  // 15. Experience Center Showcase Video Playback Assurance
+  const expVideo = document.querySelector('.showcase-visual video');
+  if (expVideo) {
+    const playExpVideo = () => {
+      expVideo.play().catch(() => {});
+    };
+    playExpVideo();
+    window.addEventListener('scroll', playExpVideo, { once: true });
+    window.addEventListener('click', playExpVideo, { once: true });
+    window.addEventListener('touchstart', playExpVideo, { once: true });
+  }
 });
 
 // ==========================================================================
