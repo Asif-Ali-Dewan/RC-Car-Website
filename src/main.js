@@ -11,23 +11,23 @@ import { Car3DScene } from './threeScene.js';
 const STORE_PRODUCTS = [
   {
     id: 'apex-f1-desert-pro',
-    title: 'Apex F1-Pro 1:8 Champagne & Burgundy Edition',
+    title: 'Apex F1-Pro 1:8 Champagne Gold Edition',
     scale: '1:8 SCALE // RTR',
     badge: 'NEW LUXURY SPEC',
     category: 'formula',
     price: 649,
-    image: '/assets/f1-redbull-top.jpg',
-    specs: '6S LiPo Ready, 3800KV Brushless Motor, 135 km/h, 4mm T700 Dry Carbon, Burgundy Aero Wings'
+    image: '/assets/f1-gold-studio.jpg',
+    specs: '6S LiPo Ready, 3800KV Brushless Motor, 135 km/h, 4mm T700 Dry Carbon, Gold Champagne Aero Wings'
   },
   {
-    id: 'mercedes-w12-collector',
-    title: 'Mercedes-AMG W12 Stealth 1:8 Museum Static',
+    id: 'lotus-classic-collector',
+    title: 'Lotus 97T Historic Turbo 1:8 Museum Static',
     scale: '1:8 SCALE // EXHIBIT',
-    badge: 'COLLECTOR',
+    badge: 'LEGEND CLASSIC',
     category: 'collector',
     price: 899,
-    image: '/assets/f1-mercedes-side.jpg',
-    specs: 'Pre-preg carbon weave, functional DRS mechanism, Pirelli P-Zero Soft slicks, museum acrylic case'
+    image: '/assets/f1-lotus-teal.jpg',
+    specs: 'Classic turbo-era side profile, Goodyear racing slicks, gold BBS wheels, museum acrylic display case'
   },
   {
     id: 'stealth-x-monocoque',
@@ -36,18 +36,18 @@ const STORE_PRODUCTS = [
     badge: 'LIMITED (50)',
     category: 'formula',
     price: 949,
-    image: '/assets/f1-stealth-top.jpg',
-    specs: 'Carbon-Kevlar tub, active titanium pushrods, dual gyro yaw stabilization, 160A Telemetry ESC'
+    image: '/assets/f1-carbon-blueprint.jpg',
+    specs: 'Exposed V6 hybrid carbon tub, active titanium pushrods, dual gyro yaw stabilization, 160A Telemetry ESC'
   },
   {
-    id: 'apex-carbon-touring',
-    title: 'Monocoque X-1 1:10 Carbon Touring Car',
-    scale: '1:10 SCALE // BELT AWD',
-    badge: 'CIRCUIT READY',
+    id: 'apex-trophy-truck',
+    title: 'Fox Racing Trophy RC 1:10 Desert Master',
+    scale: '1:10 SCALE // 4WD OFF-ROAD',
+    badge: 'DIRT RACING',
     category: 'touring',
-    price: 489,
-    image: '/assets/f1-stealth-top.jpg',
-    specs: 'Belt-driven AWD, ultra-low CG bulkhead, aluminum spool differentials, 85 km/h brushless system'
+    price: 529,
+    image: '/assets/rc-trophy-truck.jpg',
+    specs: 'High-travel long-arm suspension, aluminum threaded oil shocks, dirt rooster-tail compound, waterproof electronics'
   },
   {
     id: 'apex-drift-spec',
@@ -56,8 +56,8 @@ const STORE_PRODUCTS = [
     badge: 'PRO DRIFT',
     category: 'touring',
     price: 429,
-    image: '/assets/f1-mercedes-side.jpg',
-    specs: 'Adjustable steering angle (68° lock), magnetic body mounts, high-speed titanium gear servo'
+    image: '/assets/rc-drift-purple.jpg',
+    specs: 'Adjustable steering angle (68° lock), magnetic body mounts, neon chassis underglow, high-speed titanium gear servo'
   },
   {
     id: 'rb19-collector-edition',
@@ -776,7 +776,7 @@ function setupBlueprintModals(videoEngine) {
     },
     'inspect-stealth': {
       title: 'DARK SHADOW MONOCOQUE // 1:8 R&D PROTOTYPE',
-      image: '/assets/f1-stealth-top.jpg',
+      image: '/assets/f1-carbon-blueprint.jpg',
       info: `
         <div class="bp-info-item">
           <h4>TORAY T700 DRY CARBON MONOCOQUE</h4>
